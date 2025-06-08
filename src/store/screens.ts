@@ -5,13 +5,16 @@ export type Screen =
   | "outage"
   | "outOfMinutes"
   | "intro"
+  | "interviewSetup"
   | "instructions"
   | "settings"
   | "conversation"
+  | "interviewConversation"
   | "conversationError"
   | "positiveFeedback"
   | "negativeFeedback"
   | "finalScreen"
+  | "interviewComplete"
   | "sessionEnded";
 
 interface ScreenState {

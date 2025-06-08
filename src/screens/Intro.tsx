@@ -2,7 +2,7 @@ import { AnimatedWrapper } from "@/components/DialogWrapper";
 import React from "react";
 import { useAtom } from "jotai";
 import { screenAtom } from "@/store/screens";
-import { Unlock } from "lucide-react";
+import { Briefcase, Users } from "lucide-react";
 import AudioButton from "@/components/AudioButton";
 import { apiTokenAtom } from "@/store/tokens";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,11 @@ export const Intro: React.FC = () => {
   const [, setScreenState] = useAtom(screenAtom);
   const [token, setToken] = useAtom(apiTokenAtom);
 
-  const handleClick = () => {
+  const handleStartInterview = () => {
+    setScreenState({ currentScreen: "interviewSetup" });
+  };
+
+  const handleDemo = () => {
     setScreenState({ currentScreen: "instructions" });
   };
 
@@ -35,7 +39,8 @@ export const Intro: React.FC = () => {
           }}>
           <img src="/public/images/vector.svg" alt="Logo" className="mt-2 mb-1" style={{ width: '40px', height: 'auto' }} />
 
-          <h1 className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'Source Code Pro, monospace' }}>CVI Demo Playground</h1>
+          <h1 className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'Source Code Pro, monospace' }}>AI Interview Assistant</h1>
+          <p className="text-sm text-gray-300 text-center mb-4">Conduct professional interviews with AI-powered video conversations</p>
 
           <div className="flex flex-col gap-2 items-center mt-4">
             <Input
@@ -67,25 +72,47 @@ export const Intro: React.FC = () => {
             </p>
           </div>
 
-          <AudioButton 
-            onClick={handleClick}
-            className="relative z-20 flex items-center justify-center gap-2 rounded-3xl border border-[rgba(255,255,255,0.3)] px-4 py-2 text-sm text-white transition-all duration-200 hover:text-primary mt-4 disabled:opacity-50"
-            disabled={!token}
-            style={{
-              height: '44px',
-              transition: 'all 0.2s ease-in-out',
-              backgroundColor: 'rgba(0,0,0,0.3)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 0 15px rgba(34, 197, 254, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-          >
-            <Unlock className="size-4" />
-            Unlock Demo
-          </AudioButton>
+          <div className="flex flex-col sm:flex-row gap-3 mt-6">
+            <AudioButton 
+              onClick={handleStartInterview}
+              className="relative z-20 flex items-center justify-center gap-2 rounded-3xl border border-[rgba(255,255,255,0.3)] px-4 py-2 text-sm text-white transition-all duration-200 hover:text-primary disabled:opacity-50"
+              disabled={!token}
+              style={{
+                height: '44px',
+                transition: 'all 0.2s ease-in-out',
+                backgroundColor: 'rgba(0,0,0,0.3)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 0 15px rgba(34, 197, 254, 0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              <Briefcase className="size-4" />
+              Start Interview
+            </AudioButton>
+
+            <AudioButton 
+              onClick={handleDemo}
+              className="relative z-20 flex items-center justify-center gap-2 rounded-3xl border border-[rgba(255,255,255,0.3)] px-4 py-2 text-sm text-white transition-all duration-200 hover:text-primary disabled:opacity-50"
+              disabled={!token}
+              style={{
+                height: '44px',
+                transition: 'all 0.2s ease-in-out',
+                backgroundColor: 'rgba(0,0,0,0.3)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 0 15px rgba(34, 197, 254, 0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              <Users className="size-4" />
+              Try Demo
+            </AudioButton>
+          </div>
         </div>
       </div>
     </AnimatedWrapper>

@@ -1,4 +1,5 @@
 import { createConversation } from "@/api";
+import { createInterviewConversation } from "@/api/createInterview";
 import {
   DialogWrapper,
   AnimatedTextBlockWrapper,
@@ -32,9 +33,27 @@ const useCreateConversationMutation = () => {
       if (!token) {
         throw new Error("Token is required");
       }
-      const conversation = await createConversation(token);
-      setConversation(conversation);
-      setScreenState({ currentScreen: "conversation" });
+
+      // Check if this is an interview or demo
+      const candidateName = localStorage.getItem('candidate-name');
+      const interviewSettings = localStorage.getItem('interview-settings');
+      
+      let conversation;
+      if (candidateName && interviewSettings) {
+        // Create interview conversation
+        conversation = await createInterviewConversation(
+          token, 
+          JSON.parse(interviewSettings),
+          candidateName
+        );
+        setConversation(conversation);
+        setScreenState({ currentScreen: "interviewConversation" });
+      } else {
+        // Create demo conversation
+        conversation = await createConversation(token);
+        setConversation(conversation);
+        setScreenState({ currentScreen: "conversation" });
+      }
     } catch (error) {
       setError(error as string);
     } finally {
@@ -63,6 +82,10 @@ export const Instructions: React.FC = () => {
     return audioObj;
   }, []);
   const [isPlayingSound, setIsPlayingSound] = useState(false);
+
+  // Check if this is an interview or demo
+  const candidateName = localStorage.getItem('candidate-name');
+  const isInterview = !!candidateName;
 
   useDailyEvent(
     "camera-error",
@@ -140,6 +163,9 @@ export const Instructions: React.FC = () => {
               speed="1.75"
               color="white"
             ></l-quantum>
+            <p className="text-white">
+              {isInterview ? `Preparing interview for ${candidateName}...` : 'Connecting to AI assistant...'}
+            </p>
           </div>
         </AnimatedTextBlockWrapper>
       </DialogWrapper>
@@ -168,13 +194,23 @@ export const Instructions: React.FC = () => {
             fontFamily: 'Source Code Pro, monospace'
           }}
         >
-          <span className="text-white">See AI?</span>{" "}
-          <span style={{
-            color: '#9EEAFF'
-          }}>Act Natural.</span>
+          {isInterview ? (
+            <>
+              <span className="text-white">Ready for your</span>{" "}
+              <span style={{ color: '#9EEAFF' }}>Interview?</span>
+            </>
+          ) : (
+            <>
+              <span className="text-white">See AI?</span>{" "}
+              <span style={{ color: '#9EEAFF' }}>Act Natural.</span>
+            </>
+          )}
         </h1>
         <p className="max-w-[650px] text-center text-base sm:text-lg text-gray-400 mb-12">
-          Have a face-to-face conversation with an AI so real, it feels human—an intelligent agent ready to listen, respond, and act across countless use cases.
+          {isInterview 
+            ? `${candidateName}, your AI interviewer is ready to begin. This will be a professional conversation to assess your qualifications.`
+            : "Have a face-to-face conversation with an AI so real, it feels human—an intelligent agent ready to listen, respond, and act across countless use cases."
+          }
         </p>
         <Button
           onClick={handleClick}
@@ -193,7 +229,7 @@ export const Instructions: React.FC = () => {
           }}
         >
           <Video className="size-5" />
-          Start Video Chat
+          {isInterview ? 'Start Interview' : 'Start Video Chat'}
           {getUserMediaError && (
             <div className="absolute -top-1 left-0 right-0 flex items-center gap-1 text-wrap rounded-lg border bg-red-500 p-2 text-white backdrop-blur-sm">
               <AlertTriangle className="text-red size-4" />

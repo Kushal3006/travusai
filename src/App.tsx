@@ -7,9 +7,12 @@ import {
   Outage,
   OutOfMinutes,
   Intro,
+  InterviewSetup,
   Instructions,
   Conversation,
+  InterviewConversation,
   FinalScreen,
+  InterviewComplete,
   Settings,
 } from "./screens";
 
@@ -26,14 +29,20 @@ function App() {
         return <OutOfMinutes />;
       case "intro":
         return <Intro />;
+      case "interviewSetup":
+        return <InterviewSetup />;
       case "settings":
         return <Settings />;
       case "instructions":
         return <Instructions />;
       case "conversation":
         return <Conversation />;
+      case "interviewConversation":
+        return <InterviewConversation />;
       case "finalScreen":
         return <FinalScreen />;
+      case "interviewComplete":
+        return <InterviewComplete />;
       default:
         return <IntroLoading />;
     }
