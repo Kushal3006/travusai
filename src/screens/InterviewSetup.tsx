@@ -8,7 +8,7 @@ import { screenAtom } from "@/store/screens";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { Briefcase, Clock, Users } from "lucide-react";
+import { Briefcase, Users } from "lucide-react";
 
 const Label = ({ children, htmlFor }: { children: React.ReactNode; htmlFor: string }) => (
   <label htmlFor={htmlFor} className="text-sm font-medium text-white mb-2 block">
@@ -81,11 +81,11 @@ export const InterviewSetup: React.FC = () => {
   return (
     <DialogWrapper>
       <AnimatedTextBlockWrapper>
-        <div className="w-full max-w-2xl space-y-6">
-          <div className="text-center mb-8">
-            <Briefcase className="size-16 text-primary mx-auto mb-4" />
-            <h1 className="text-3xl font-bold text-white mb-2">Interview Setup</h1>
-            <p className="text-gray-400">Configure your AI-powered interview session</p>
+        <div className="w-full max-w-2xl">
+          <div className="text-center mb-6">
+            <Briefcase className="size-12 text-primary mx-auto mb-3" />
+            <h1 className="text-2xl font-bold text-white mb-2">Interview Setup</h1>
+            <p className="text-gray-400 text-sm">Configure your AI-powered interview session</p>
           </div>
 
           <div className="space-y-4">
@@ -176,7 +176,7 @@ export const InterviewSetup: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex gap-4 pt-6">
+          <div className="flex gap-4 pt-6 mt-6">
             <Button
               onClick={handleBack}
               variant="outline"
