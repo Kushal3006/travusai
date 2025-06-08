@@ -81,102 +81,116 @@ export const InterviewSetup: React.FC = () => {
   return (
     <DialogWrapper>
       <AnimatedTextBlockWrapper>
-        <div className="w-full max-w-2xl">
+        <div className="w-full max-w-2xl h-full flex flex-col">
           <div className="text-center mb-6">
             <Briefcase className="size-12 text-primary mx-auto mb-3" />
             <h1 className="text-2xl font-bold text-white mb-2">Interview Setup</h1>
             <p className="text-gray-400 text-sm">Configure your AI-powered interview session</p>
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="candidateName">Candidate Name *</Label>
-              <Input
-                id="candidateName"
-                value={candidateName}
-                onChange={(e) => setCandidateName(e.target.value)}
-                placeholder="Enter candidate's full name"
-                className="bg-black/20 text-white font-mono"
-                style={{ fontFamily: "'Source Code Pro', monospace" }}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="position">Position *</Label>
-              <Select
-                value={settings.position}
-                onChange={(e) => setSettings({ ...settings, position: e.target.value })}
-              >
-                <option value="">Select a position</option>
-                {positions.map(pos => (
-                  <option key={pos} value={pos} className="bg-black text-white">
-                    {pos}
-                  </option>
-                ))}
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Scrollable form content */}
+          <div className="flex-1 overflow-y-auto pr-4 -mr-4 max-h-[calc(100vh-400px)]">
+            <div className="space-y-4">
               <div>
-                <Label htmlFor="difficulty">Experience Level</Label>
+                <Label htmlFor="candidateName">Candidate Name *</Label>
+                <Input
+                  id="candidateName"
+                  value={candidateName}
+                  onChange={(e) => setCandidateName(e.target.value)}
+                  placeholder="Enter candidate's full name"
+                  className="bg-black/20 text-white font-mono"
+                  style={{ fontFamily: "'Source Code Pro', monospace" }}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="position">Position *</Label>
                 <Select
-                  value={settings.difficulty}
-                  onChange={(e) => setSettings({ ...settings, difficulty: e.target.value as any })}
+                  value={settings.position}
+                  onChange={(e) => setSettings({ ...settings, position: e.target.value })}
                 >
-                  {difficulties.map(diff => (
-                    <option key={diff.value} value={diff.value} className="bg-black text-white">
-                      {diff.label}
+                  <option value="">Select a position</option>
+                  {positions.map(pos => (
+                    <option key={pos} value={pos} className="bg-black text-white">
+                      {pos}
                     </option>
                   ))}
                 </Select>
               </div>
 
-              <div>
-                <Label htmlFor="duration">Interview Duration</Label>
-                <Select
-                  value={settings.duration.toString()}
-                  onChange={(e) => setSettings({ ...settings, duration: parseInt(e.target.value) })}
-                >
-                  {durations.map(dur => (
-                    <option key={dur.value} value={dur.value} className="bg-black text-white">
-                      {dur.label}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-            </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="difficulty">Experience Level</Label>
+                  <Select
+                    value={settings.difficulty}
+                    onChange={(e) => setSettings({ ...settings, difficulty: e.target.value as any })}
+                  >
+                    {difficulties.map(diff => (
+                      <option key={diff.value} value={diff.value} className="bg-black text-white">
+                        {diff.label}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
 
-            <div>
-              <Label htmlFor="categories">Interview Categories</Label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
-                {["technical", "behavioral", "problem-solving"].map(category => (
-                  <label key={category} className="flex items-center space-x-2 text-white">
-                    <input
-                      type="checkbox"
-                      checked={settings.categories.includes(category)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSettings({
-                            ...settings,
-                            categories: [...settings.categories, category]
-                          });
-                        } else {
-                          setSettings({
-                            ...settings,
-                            categories: settings.categories.filter(c => c !== category)
-                          });
-                        }
-                      }}
-                      className="rounded border-gray-300"
-                    />
-                    <span className="capitalize font-mono text-sm">{category}</span>
-                  </label>
-                ))}
+                <div>
+                  <Label htmlFor="duration">Interview Duration</Label>
+                  <Select
+                    value={settings.duration.toString()}
+                    onChange={(e) => setSettings({ ...settings, duration: parseInt(e.target.value) })}
+                  >
+                    {durations.map(dur => (
+                      <option key={dur.value} value={dur.value} className="bg-black text-white">
+                        {dur.label}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="categories">Interview Categories</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
+                  {["technical", "behavioral", "problem-solving"].map(category => (
+                    <label key={category} className="flex items-center space-x-2 text-white">
+                      <input
+                        type="checkbox"
+                        checked={settings.categories.includes(category)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSettings({
+                              ...settings,
+                              categories: [...settings.categories, category]
+                            });
+                          } else {
+                            setSettings({
+                              ...settings,
+                              categories: settings.categories.filter(c => c !== category)
+                            });
+                          }
+                        }}
+                        className="rounded border-gray-300"
+                      />
+                      <span className="capitalize font-mono text-sm">{category}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="customQuestions">Additional Questions (Optional)</Label>
+                <textarea
+                  id="customQuestions"
+                  placeholder="Add any specific questions you'd like to include..."
+                  className="w-full h-20 rounded-md border border-input bg-black/20 px-3 py-2 text-sm text-white font-mono resize-none"
+                  style={{ fontFamily: "'Source Code Pro', monospace" }}
+                />
               </div>
             </div>
           </div>
 
-          <div className="flex gap-4 pt-6 mt-6">
+          {/* Fixed bottom buttons */}
+          <div className="flex gap-4 pt-6 mt-6 border-t border-gray-700">
             <Button
               onClick={handleBack}
               variant="outline"
