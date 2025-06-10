@@ -85,10 +85,10 @@ export const InterviewSetup: React.FC = () => {
 
   return (
     <DialogWrapper>
-      <div className="relative w-full h-full flex items-center justify-center p-6">
-        <div className="w-full max-w-4xl bg-gradient-to-br from-black/60 via-black/40 to-black/60 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl">
+      <div className="relative w-full h-full flex items-center justify-center p-4">
+        <div className="w-full max-w-5xl h-[90vh] bg-gradient-to-br from-black/60 via-black/40 to-black/60 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl flex flex-col">
           {/* Header */}
-          <div className="text-center p-8 pb-6 border-b border-white/10">
+          <div className="text-center p-6 pb-4 border-b border-white/10 flex-shrink-0">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/40 rounded-2xl mb-4">
               <Briefcase className="size-8 text-primary" />
             </div>
@@ -97,9 +97,9 @@ export const InterviewSetup: React.FC = () => {
           </div>
 
           {/* Scrollable Content */}
-          <div className="relative">
+          <div className="flex-1 overflow-hidden">
             <div 
-              className="max-h-[60vh] overflow-y-auto px-8 py-6"
+              className="h-full overflow-y-auto px-6 py-4"
               style={{
                 scrollbarWidth: 'thin',
                 scrollbarColor: 'rgba(34, 197, 254, 0.5) transparent'
@@ -125,7 +125,7 @@ export const InterviewSetup: React.FC = () => {
                 }
               `}</style>
 
-              <div className="space-y-8">
+              <div className="space-y-6 pb-4">
                 {/* Candidate Information */}
                 <div className="bg-gradient-to-r from-white/5 to-white/10 rounded-2xl p-6 border border-white/10">
                   <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
@@ -264,7 +264,7 @@ export const InterviewSetup: React.FC = () => {
           </div>
 
           {/* Fixed Footer */}
-          <div className="flex gap-4 p-8 pt-6 border-t border-white/10">
+          <div className="flex gap-4 p-6 pt-4 border-t border-white/10 flex-shrink-0">
             <Button
               onClick={handleBack}
               variant="outline"
