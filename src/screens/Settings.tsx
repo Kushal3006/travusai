@@ -7,7 +7,7 @@ import { useAtom } from "jotai";
 import { getDefaultStore } from "jotai";
 import { settingsAtom, settingsSavedAtom } from "@/store/settings";
 import { screenAtom } from "@/store/screens";
-import { X } from "lucide-react";
+import { X, Settings as SettingsIcon, User, Globe, Mic, MessageSquare, FileText, Key } from "lucide-react";
 import * as React from "react";
 import { apiTokenAtom } from "@/store/tokens";
 
@@ -22,11 +22,11 @@ const Button = React.forwardRef<
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50",
+        "inline-flex items-center justify-center rounded-xl text-base font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50",
         {
-          "border border-input bg-transparent hover:bg-accent": variant === "outline",
-          "hover:bg-accent hover:text-accent-foreground": variant === "ghost",
-          "size-10": size === "icon",
+          "border-2 border-white/30 bg-white/10 hover:bg-white/20": variant === "outline",
+          "hover:bg-white/10": variant === "ghost",
+          "size-12": size === "icon",
         },
         className
       )}
@@ -45,7 +45,7 @@ const Input = React.forwardRef<
   return (
     <input
       className={cn(
-        "flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+        "flex h-12 w-full rounded-xl border-2 border-white/20 bg-black/30 backdrop-blur-sm px-4 py-3 text-base text-white transition-all duration-200 hover:border-primary/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 placeholder:text-gray-400",
         className
       )}
       ref={ref}
@@ -63,7 +63,7 @@ const Textarea = React.forwardRef<
   return (
     <textarea
       className={cn(
-        "flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+        "flex min-h-[100px] w-full rounded-xl border-2 border-white/20 bg-black/30 backdrop-blur-sm px-4 py-3 text-base text-white transition-all duration-200 hover:border-primary/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 placeholder:text-gray-400 resize-none",
         className
       )}
       ref={ref}
@@ -72,26 +72,6 @@ const Textarea = React.forwardRef<
   );
 });
 Textarea.displayName = "Textarea";
-
-// Switch Component
-const Switch = React.forwardRef<
-  HTMLInputElement,
-  React.InputHTMLAttributes<HTMLInputElement>
->(({ className, ...props }, ref) => {
-  return (
-    <input
-      type="checkbox"
-      role="switch"
-      className={cn(
-        "peer h-6 w-11 rounded-full bg-input transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary",
-        className
-      )}
-      ref={ref}
-      {...props}
-    />
-  );
-});
-Switch.displayName = "Switch";
 
 // Label Component
 const Label = React.forwardRef<
@@ -102,7 +82,7 @@ const Label = React.forwardRef<
     <label
       ref={ref}
       className={cn(
-        "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+        "text-sm font-semibold text-white mb-3 block tracking-wide",
         className
       )}
       {...props}
@@ -119,7 +99,7 @@ const Select = React.forwardRef<
   return (
     <select
       className={cn(
-        "flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+        "flex h-12 w-full rounded-xl border-2 border-white/20 bg-black/30 backdrop-blur-sm px-4 py-3 text-base text-white transition-all duration-200 hover:border-primary/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20",
         className
       )}
       ref={ref}
@@ -159,23 +139,18 @@ export const Settings: React.FC = () => {
   const handleSave = async () => {
     console.log('Current settings before save:', settings);
     
-    // Create a new settings object to ensure we have a fresh reference
     const updatedSettings = {
       ...settings,
-      greeting: settings.greeting,  // explicitly set the greeting
+      greeting: settings.greeting,
     };
     
-    // Save to localStorage
     localStorage.setItem('tavus-settings', JSON.stringify(updatedSettings));
     
-    // Update the store with the new settings object
     const store = getDefaultStore();
     store.set(settingsAtom, updatedSettings);
     
-    // Wait a moment to ensure the store is updated
     await new Promise(resolve => setTimeout(resolve, 100));
     
-    // Check both localStorage and store
     const storedSettings = localStorage.getItem('tavus-settings');
     const storeSettings = store.get(settingsAtom);
     
@@ -188,156 +163,224 @@ export const Settings: React.FC = () => {
 
   return (
     <DialogWrapper>
-      <AnimatedTextBlockWrapper>
-        <div className="relative w-full max-w-2xl">
-          <div className="sticky top-0 pt-8 pb-6 z-10">
+      <div className="relative w-full h-full flex items-center justify-center p-6">
+        <div className="w-full max-w-4xl bg-gradient-to-br from-black/60 via-black/40 to-black/60 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl">
+          {/* Header */}
+          <div className="flex items-center justify-between p-8 pb-6 border-b border-white/10">
+            <div className="flex items-center gap-4">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/40 rounded-xl">
+                <SettingsIcon className="size-6 text-primary" />
+              </div>
+              <h2 className="text-3xl font-bold text-white">Settings</h2>
+            </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={handleClose}
-              className="absolute right-0 top-8"
+              className="text-gray-400 hover:text-white"
             >
               <X className="size-6" />
             </Button>
-            
-            <h2 className="text-2xl font-bold text-white">Settings</h2>
           </div>
           
-          <div className="h-[calc(100vh-500px)] overflow-y-auto pr-4 -mr-4">
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="name">Your Name</Label>
-                <Input
-                  id="name"
-                  value={settings.name}
-                  onChange={(e) => setSettings({ ...settings, name: e.target.value })}
-                  placeholder="Enter your name"
-                  className="bg-black/20 font-mono"
-                  style={{ fontFamily: "'Source Code Pro', monospace" }}
-                />
-              </div>
+          {/* Scrollable Content */}
+          <div className="relative">
+            <div 
+              className="max-h-[60vh] overflow-y-auto px-8 py-6"
+              style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgba(34, 197, 254, 0.5) transparent'
+              }}
+            >
+              <style jsx>{`
+                div::-webkit-scrollbar {
+                  width: 8px;
+                }
+                div::-webkit-scrollbar-track {
+                  background: rgba(255, 255, 255, 0.1);
+                  border-radius: 10px;
+                }
+                div::-webkit-scrollbar-thumb {
+                  background: linear-gradient(180deg, #22C5FE 0%, #1E90FF 100%);
+                  border-radius: 10px;
+                  border: 2px solid transparent;
+                  background-clip: content-box;
+                }
+                div::-webkit-scrollbar-thumb:hover {
+                  background: linear-gradient(180deg, #1E90FF 0%, #22C5FE 100%);
+                  background-clip: content-box;
+                }
+              `}</style>
 
-              <div className="space-y-2">
-                <Label htmlFor="language">Language</Label>
-                <Select
-                  id="language"
-                  value={settings.language}
-                  onChange={(e) => setSettings({ ...settings, language: e.target.value })}
-                  className="bg-black/20 font-mono"
-                  style={{ fontFamily: "'Source Code Pro', monospace" }}
-                >
-                  {languages.map((lang) => (
-                    <option 
-                      key={lang.value} 
-                      value={lang.value}
-                      className="bg-black text-white font-mono"
-                      style={{ fontFamily: "'Source Code Pro', monospace" }}
-                    >
-                      {lang.label}
-                    </option>
-                  ))}
-                </Select>
-              </div>
+              <div className="space-y-8">
+                {/* Personal Information */}
+                <div className="bg-gradient-to-r from-white/5 to-white/10 rounded-2xl p-6 border border-white/10">
+                  <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
+                    <User className="size-6 text-primary" />
+                    Personal Information
+                  </h3>
+                  <div>
+                    <Label htmlFor="name">Your Name</Label>
+                    <Input
+                      id="name"
+                      value={settings.name}
+                      onChange={(e) => setSettings({ ...settings, name: e.target.value })}
+                      placeholder="Enter your name"
+                      style={{ fontFamily: "'Inter', sans-serif" }}
+                    />
+                  </div>
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="interruptSensitivity">Interrupt Sensitivity</Label>
-                <Select
-                  id="interruptSensitivity"
-                  value={settings.interruptSensitivity}
-                  onChange={(e) => setSettings({ ...settings, interruptSensitivity: e.target.value })}
-                  className="bg-black/20 font-mono"
-                  style={{ fontFamily: "'Source Code Pro', monospace" }}
-                >
-                  {interruptSensitivities.map((sensitivity) => (
-                    <option 
-                      key={sensitivity.value} 
-                      value={sensitivity.value}
-                      className="bg-black text-white font-mono"
-                      style={{ fontFamily: "'Source Code Pro', monospace" }}
-                    >
-                      {sensitivity.label}
-                    </option>
-                  ))}
-                </Select>
-              </div>
+                {/* Language & Communication */}
+                <div className="bg-gradient-to-r from-white/5 to-white/10 rounded-2xl p-6 border border-white/10">
+                  <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
+                    <Globe className="size-6 text-primary" />
+                    Language & Communication
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <Label htmlFor="language">Language</Label>
+                      <Select
+                        id="language"
+                        value={settings.language}
+                        onChange={(e) => setSettings({ ...settings, language: e.target.value })}
+                        style={{ fontFamily: "'Inter', sans-serif" }}
+                      >
+                        {languages.map((lang) => (
+                          <option 
+                            key={lang.value} 
+                            value={lang.value}
+                            className="bg-black text-white"
+                            style={{ fontFamily: "'Inter', sans-serif" }}
+                          >
+                            {lang.label}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="greeting">Custom Greeting</Label>
-                <Input
-                  id="greeting"
-                  value={settings.greeting}
-                  onChange={(e) => setSettings({ ...settings, greeting: e.target.value })}
-                  placeholder="Enter custom greeting"
-                  className="bg-black/20 font-mono"
-                  style={{ fontFamily: "'Source Code Pro', monospace" }}
-                />
-              </div>
+                    <div>
+                      <Label htmlFor="interruptSensitivity">Interrupt Sensitivity</Label>
+                      <Select
+                        id="interruptSensitivity"
+                        value={settings.interruptSensitivity}
+                        onChange={(e) => setSettings({ ...settings, interruptSensitivity: e.target.value })}
+                        style={{ fontFamily: "'Inter', sans-serif" }}
+                      >
+                        {interruptSensitivities.map((sensitivity) => (
+                          <option 
+                            key={sensitivity.value} 
+                            value={sensitivity.value}
+                            className="bg-black text-white"
+                            style={{ fontFamily: "'Inter', sans-serif" }}
+                          >
+                            {sensitivity.label}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+                  </div>
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="context">Custom Context</Label>
-                <Textarea
-                  id="context"
-                  value={settings.context}
-                  onChange={(e) => setSettings({ ...settings, context: e.target.value })}
-                  placeholder="Paste or type custom context"
-                  className="min-h-[100px] bg-black/20 font-mono"
-                  style={{ fontFamily: "'Source Code Pro', monospace" }}
-                />
-              </div>
+                {/* Conversation Settings */}
+                <div className="bg-gradient-to-r from-white/5 to-white/10 rounded-2xl p-6 border border-white/10">
+                  <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
+                    <MessageSquare className="size-6 text-primary" />
+                    Conversation Settings
+                  </h3>
+                  <div className="space-y-6">
+                    <div>
+                      <Label htmlFor="greeting">Custom Greeting</Label>
+                      <Input
+                        id="greeting"
+                        value={settings.greeting}
+                        onChange={(e) => setSettings({ ...settings, greeting: e.target.value })}
+                        placeholder="Enter custom greeting message"
+                        style={{ fontFamily: "'Inter', sans-serif" }}
+                      />
+                    </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="persona">Set Custom Persona ID</Label>
-                <Input
-                  id="persona"
-                  value={settings.persona}
-                  onChange={(e) => setSettings({ ...settings, persona: e.target.value })}
-                  placeholder="p2fbd605"
-                  className="bg-black/20 font-mono"
-                  style={{ fontFamily: "'Source Code Pro', monospace" }}
-                />
-              </div>
+                    <div>
+                      <Label htmlFor="context">Custom Context</Label>
+                      <Textarea
+                        id="context"
+                        value={settings.context}
+                        onChange={(e) => setSettings({ ...settings, context: e.target.value })}
+                        placeholder="Paste or type custom context for the AI assistant"
+                        style={{ fontFamily: "'Inter', sans-serif" }}
+                      />
+                    </div>
+                  </div>
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="replica">Set Custom Replica ID</Label>
-                <Input
-                  id="replica"
-                  value={settings.replica}
-                  onChange={(e) => setSettings({ ...settings, replica: e.target.value })}
-                  placeholder="rfb51183fe"
-                  className="bg-black/20 font-mono"
-                  style={{ fontFamily: "'Source Code Pro', monospace" }}
-                />
-              </div>
+                {/* Advanced Settings */}
+                <div className="bg-gradient-to-r from-white/5 to-white/10 rounded-2xl p-6 border border-white/10">
+                  <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
+                    <FileText className="size-6 text-primary" />
+                    Advanced Settings
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <Label htmlFor="persona">Custom Persona ID</Label>
+                      <Input
+                        id="persona"
+                        value={settings.persona}
+                        onChange={(e) => setSettings({ ...settings, persona: e.target.value })}
+                        placeholder="p2fbd605"
+                        style={{ fontFamily: "'Inter', sans-serif" }}
+                      />
+                    </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="apiToken">API Token</Label>
-                <Input
-                  id="apiToken"
-                  type="password"
-                  value={token || ""}
-                  onChange={(e) => {
-                    const newToken = e.target.value;
-                    setToken(newToken);
-                    localStorage.setItem('tavus-token', newToken);
-                  }}
-                  placeholder="Enter Tavus API Key"
-                  className="bg-black/20 font-mono"
-                  style={{ fontFamily: "'Source Code Pro', monospace" }}
-                />
+                    <div>
+                      <Label htmlFor="replica">Custom Replica ID</Label>
+                      <Input
+                        id="replica"
+                        value={settings.replica}
+                        onChange={(e) => setSettings({ ...settings, replica: e.target.value })}
+                        placeholder="rfb51183fe"
+                        style={{ fontFamily: "'Inter', sans-serif" }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* API Configuration */}
+                <div className="bg-gradient-to-r from-white/5 to-white/10 rounded-2xl p-6 border border-white/10">
+                  <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
+                    <Key className="size-6 text-primary" />
+                    API Configuration
+                  </h3>
+                  <div>
+                    <Label htmlFor="apiToken">API Token</Label>
+                    <Input
+                      id="apiToken"
+                      type="password"
+                      value={token || ""}
+                      onChange={(e) => {
+                        const newToken = e.target.value;
+                        setToken(newToken);
+                        localStorage.setItem('tavus-token', newToken);
+                      }}
+                      placeholder="Enter Tavus API Key"
+                      style={{ fontFamily: "'Inter', sans-serif" }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="sticky bottom-0 mt-6 border-t border-gray-700 pt-6 pb-8">
-            <button
+          {/* Fixed Footer */}
+          <div className="p-8 pt-6 border-t border-white/10">
+            <Button
               onClick={handleSave}
-              className="hover:shadow-footer-btn relative flex items-center justify-center gap-2 rounded-3xl border border-[rgba(255,255,255,0.3)] bg-[rgba(255,255,255,0.1)] px-4 py-3 text-sm font-bold text-white transition-all duration-200 hover:text-primary"
+              className="w-full h-12 text-base font-semibold rounded-xl bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-500/90 transition-all duration-200 shadow-lg"
             >
               Save Changes
-            </button>
+            </Button>
           </div>
         </div>
-      </AnimatedTextBlockWrapper>
+      </div>
     </DialogWrapper>
   );
-}; 
+};
