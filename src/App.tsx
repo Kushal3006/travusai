@@ -49,10 +49,20 @@ function App() {
   };
 
   return (
-    <main className="flex h-svh flex-col items-center justify-between gap-3 p-5 sm:gap-4 lg:p-8 bg-black">
-      {currentScreen !== "introLoading" && <Header />}
-      {renderScreen()}
-      {currentScreen !== "introLoading" && <Footer />}
+    <main className="flex h-screen w-screen flex-col bg-black overflow-hidden">
+      {currentScreen !== "introLoading" && (
+        <div className="absolute top-0 left-0 right-0 z-50 p-4 sm:p-6 lg:p-8">
+          <Header />
+        </div>
+      )}
+      <div className="flex-1 w-full h-full">
+        {renderScreen()}
+      </div>
+      {currentScreen !== "introLoading" && (
+        <div className="absolute bottom-0 left-0 right-0 z-50 p-4 sm:p-6 lg:p-8">
+          <Footer />
+        </div>
+      )}
     </main>
   );
 }

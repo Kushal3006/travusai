@@ -33,4 +33,12 @@ export interface InterviewSettings {
   duration: number; // in minutes
   categories: string[];
   customQuestions: string[];
+  language: string; // Added language support
+}
+
+export interface LanguageOption {
+  code: string;
+  name: string;
+  nativeName: string;
+  flag: string;
 }

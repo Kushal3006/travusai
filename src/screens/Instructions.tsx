@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { apiTokenAtom } from "@/store/tokens";
 import { quantum } from 'ldrs';
 import gloriaVideo from "@/assets/video/gloria.mp4";
+import { getLanguageOptions } from "@/api/interviewQuestions";
 
 // Register the quantum loader
 quantum.register();
@@ -85,7 +86,15 @@ export const Instructions: React.FC = () => {
 
   // Check if this is an interview or demo
   const candidateName = localStorage.getItem('candidate-name');
+  const interviewSettings = localStorage.getItem('interview-settings');
   const isInterview = !!candidateName;
+  
+  let selectedLanguage = null;
+  if (interviewSettings) {
+    const settings = JSON.parse(interviewSettings);
+    const languageOptions = getLanguageOptions();
+    selectedLanguage = languageOptions.find(lang => lang.code === settings.language);
+  }
 
   useDailyEvent(
     "camera-error",
@@ -153,9 +162,9 @@ export const Instructions: React.FC = () => {
           muted
           loop
           playsInline
-          className="fixed inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
         <AnimatedTextBlockWrapper>
           <div className="flex flex-col items-center justify-center gap-4">
             <l-quantum
@@ -163,8 +172,11 @@ export const Instructions: React.FC = () => {
               speed="1.75"
               color="white"
             ></l-quantum>
-            <p className="text-white">
-              {isInterview ? `Preparing interview for ${candidateName}...` : 'Connecting to AI assistant...'}
+            <p className="text-white text-center">
+              {isInterview 
+                ? `Preparing ${selectedLanguage?.nativeName || 'English'} interview for ${candidateName}...`
+                : 'Connecting to AI assistant...'
+              }
             </p>
           </div>
         </AnimatedTextBlockWrapper>
@@ -184,77 +196,92 @@ export const Instructions: React.FC = () => {
         muted
         loop
         playsInline
-        className="fixed inset-0 h-full w-full object-cover"
+        className="absolute inset-0 h-full w-full object-cover"
       />
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <AnimatedTextBlockWrapper>
-        <h1 
-          className="mb-4 pt-1 text-center text-3xl sm:text-4xl lg:text-5xl font-semibold"
-          style={{
-            fontFamily: 'Source Code Pro, monospace'
-          }}
-        >
-          {isInterview ? (
-            <>
-              <span className="text-white">Ready for your</span>{" "}
-              <span style={{ color: '#9EEAFF' }}>Interview?</span>
-            </>
-          ) : (
-            <>
-              <span className="text-white">See AI?</span>{" "}
-              <span style={{ color: '#9EEAFF' }}>Act Natural.</span>
-            </>
-          )}
-        </h1>
-        <p className="max-w-[650px] text-center text-base sm:text-lg text-gray-400 mb-12">
-          {isInterview 
-            ? `${candidateName}, your AI interviewer is ready to begin. This will be a professional conversation to assess your qualifications.`
-            : "Have a face-to-face conversation with an AI so real, it feels human—an intelligent agent ready to listen, respond, and act across countless use cases."
-          }
-        </p>
-        <Button
-          onClick={handleClick}
-          className="relative z-20 flex items-center justify-center gap-2 rounded-3xl border border-[rgba(255,255,255,0.3)] px-8 py-2 text-sm text-white transition-all duration-200 hover:text-primary mb-12 disabled:opacity-50"
-          disabled={isLoading}
-          style={{
-            height: '48px',
-            transition: 'all 0.2s ease-in-out',
-            backgroundColor: 'rgba(0,0,0,0.3)',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.boxShadow = '0 0 15px rgba(34, 197, 254, 0.5)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.boxShadow = 'none';
-          }}
-        >
-          <Video className="size-5" />
-          {isInterview ? 'Start Interview' : 'Start Video Chat'}
-          {getUserMediaError && (
-            <div className="absolute -top-1 left-0 right-0 flex items-center gap-1 text-wrap rounded-lg border bg-red-500 p-2 text-white backdrop-blur-sm">
-              <AlertTriangle className="text-red size-4" />
-              <p>
-                To chat with the AI, please allow microphone access. Check your
-                browser settings.
-              </p>
+        <div className="text-center max-w-4xl mx-auto px-4">
+          <h1 
+            className="mb-6 pt-1 text-center text-3xl sm:text-4xl lg:text-5xl font-semibold"
+            style={{
+              fontFamily: 'Source Code Pro, monospace'
+            }}
+          >
+            {isInterview ? (
+              <>
+                <span className="text-white">Ready for your</span>{" "}
+                <span style={{ color: '#9EEAFF' }}>
+                  {selectedLanguage?.nativeName || 'English'} Interview?
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="text-white">See AI?</span>{" "}
+                <span style={{ color: '#9EEAFF' }}>Act Natural.</span>
+              </>
+            )}
+          </h1>
+          
+          <p className="max-w-[650px] mx-auto text-center text-base sm:text-lg text-gray-400 mb-12">
+            {isInterview 
+              ? `${candidateName}, your AI interviewer is ready to begin a professional conversation in ${selectedLanguage?.nativeName || 'English'} to assess your qualifications.`
+              : "Have a face-to-face conversation with an AI so real, it feels human—an intelligent agent ready to listen, respond, and act across countless use cases."
+            }
+          </p>
+          
+          {selectedLanguage && (
+            <div className="mb-8 inline-flex items-center gap-3 bg-[rgba(0,0,0,0.3)] px-6 py-3 rounded-full border border-white/20">
+              <span className="text-2xl">{selectedLanguage.flag}</span>
+              <span className="text-white font-medium">Interview Language: {selectedLanguage.nativeName}</span>
             </div>
           )}
-        </Button>
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:gap-8 text-gray-400 justify-center">
-          <div className="flex items-center gap-3 bg-[rgba(0,0,0,0.2)] px-4 py-2 rounded-full">
-            <Mic className="size-5 text-primary" />
-            Mic access is required
+          
+          <Button
+            onClick={handleClick}
+            className="relative z-20 flex items-center justify-center gap-2 rounded-3xl border border-[rgba(255,255,255,0.3)] px-8 py-2 text-sm text-white transition-all duration-200 hover:text-primary mb-12 disabled:opacity-50"
+            disabled={isLoading}
+            style={{
+              height: '48px',
+              transition: 'all 0.2s ease-in-out',
+              backgroundColor: 'rgba(0,0,0,0.3)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = '0 0 15px rgba(34, 197, 254, 0.5)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            <Video className="size-5" />
+            {isInterview ? 'Start Interview' : 'Start Video Chat'}
+            {getUserMediaError && (
+              <div className="absolute -top-1 left-0 right-0 flex items-center gap-1 text-wrap rounded-lg border bg-red-500 p-2 text-white backdrop-blur-sm">
+                <AlertTriangle className="text-red size-4" />
+                <p>
+                  To chat with the AI, please allow microphone access. Check your
+                  browser settings.
+                </p>
+              </div>
+            )}
+          </Button>
+          
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:gap-8 text-gray-400 justify-center">
+            <div className="flex items-center gap-3 bg-[rgba(0,0,0,0.2)] px-4 py-2 rounded-full">
+              <Mic className="size-5 text-primary" />
+              Mic access is required
+            </div>
+            <div className="flex items-center gap-3 bg-[rgba(0,0,0,0.2)] px-4 py-2 rounded-full">
+              <Video className="size-5 text-primary" />
+              Camera access is required
+            </div>
           </div>
-          <div className="flex items-center gap-3 bg-[rgba(0,0,0,0.2)] px-4 py-2 rounded-full">
-            <Video className="size-5 text-primary" />
-            Camera access is required
-          </div>
+          
+          <span className="absolute bottom-6 left-1/2 transform -translate-x-1/2 px-4 text-sm text-gray-500 text-center">
+            By starting a conversation, I accept the{' '}
+            <a href="#" className="text-primary hover:underline">Terms of Use</a> and acknowledge the{' '}
+            <a href="#" className="text-primary hover:underline">Privacy Policy</a>.
+          </span>
         </div>
-        <span className="absolute bottom-6 px-4 text-sm text-gray-500 sm:bottom-8 sm:px-8 text-center">
-          By starting a conversation, I accept the{' '}
-          <a href="#" className="text-primary hover:underline">Terms of Use</a> and acknowledge the{' '}
-          <a href="#" className="text-primary hover:underline">Privacy Policy</a>.
-        </span>
       </AnimatedTextBlockWrapper>
     </DialogWrapper>
   );

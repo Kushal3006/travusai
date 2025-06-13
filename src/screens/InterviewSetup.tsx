@@ -8,7 +8,8 @@ import { screenAtom } from "@/store/screens";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { Briefcase, Users, Clock, Target, Brain, CheckCircle } from "lucide-react";
+import { Briefcase, Users, Clock, Target, Brain, CheckCircle, Globe } from "lucide-react";
+import { getLanguageOptions } from "@/api/interviewQuestions";
 
 const Label = ({ children, htmlFor }: { children: React.ReactNode; htmlFor: string }) => (
   <label htmlFor={htmlFor} className="text-sm font-semibold text-white mb-3 block tracking-wide">
@@ -67,6 +68,8 @@ export const InterviewSetup: React.FC = () => {
     { id: "problem-solving", label: "Problem Solving", icon: Target, color: "text-purple-400" }
   ];
 
+  const languageOptions = getLanguageOptions();
+
   const handleStartInterview = () => {
     if (!candidateName.trim() || !settings.position) {
       alert("Please fill in all required fields");
@@ -85,8 +88,8 @@ export const InterviewSetup: React.FC = () => {
 
   return (
     <DialogWrapper>
-      <div className="relative w-full h-full flex items-center justify-center p-4">
-        <div className="w-full max-w-5xl h-[90vh] bg-gradient-to-br from-black/60 via-black/40 to-black/60 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl flex flex-col">
+      <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+        <div className="w-full max-w-6xl h-full bg-gradient-to-br from-black/60 via-black/40 to-black/60 backdrop-blur-xl border border-white/20 shadow-2xl flex flex-col m-4 rounded-3xl">
           {/* Header */}
           <div className="text-center p-6 pb-4 border-b border-white/10 flex-shrink-0">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/40 rounded-2xl mb-4">
@@ -183,74 +186,94 @@ export const InterviewSetup: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Interview Configuration */}
+                {/* Language & Duration */}
                 <div className="bg-gradient-to-r from-white/5 to-white/10 rounded-2xl p-6 border border-white/10">
                   <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
-                    <Clock className="size-6 text-primary" />
-                    Interview Configuration
+                    <Globe className="size-6 text-primary" />
+                    Language & Duration
                   </h3>
-                  <div className="mb-6">
-                    <Label htmlFor="duration">Interview Duration</Label>
-                    <Select
-                      value={settings.duration.toString()}
-                      onChange={(e) => setSettings({ ...settings, duration: parseInt(e.target.value) })}
-                    >
-                      {durations.map(dur => (
-                        <option key={dur.value} value={dur.value} className="bg-black text-white">
-                          {dur.icon} {dur.label}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="categories">Interview Categories</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {categories.map(category => {
-                        const Icon = category.icon;
-                        const isSelected = settings.categories.includes(category.id);
-                        return (
-                          <label 
-                            key={category.id} 
-                            className={`flex items-center space-x-3 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
-                              isSelected 
-                                ? 'bg-primary/20 border-primary text-white' 
-                                : 'bg-black/20 border-white/20 text-gray-300 hover:border-white/40 hover:bg-white/5'
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSettings({
-                                    ...settings,
-                                    categories: [...settings.categories, category.id]
-                                  });
-                                } else {
-                                  setSettings({
-                                    ...settings,
-                                    categories: settings.categories.filter(c => c !== category.id)
-                                  });
-                                }
-                              }}
-                              className="sr-only"
-                            />
-                            <div className={`flex-shrink-0 ${isSelected ? 'text-primary' : category.color}`}>
-                              {isSelected ? <CheckCircle className="size-5" /> : <Icon className="size-5" />}
-                            </div>
-                            <span className="font-medium">{category.label}</span>
-                          </label>
-                        );
-                      })}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <Label htmlFor="language">Interview Language</Label>
+                      <Select
+                        value={settings.language}
+                        onChange={(e) => setSettings({ ...settings, language: e.target.value })}
+                      >
+                        {languageOptions.map(lang => (
+                          <option key={lang.code} value={lang.code} className="bg-black text-white">
+                            {lang.flag} {lang.nativeName} ({lang.name})
+                          </option>
+                        ))}
+                      </Select>
                     </div>
+
+                    <div>
+                      <Label htmlFor="duration">Interview Duration</Label>
+                      <Select
+                        value={settings.duration.toString()}
+                        onChange={(e) => setSettings({ ...settings, duration: parseInt(e.target.value) })}
+                      >
+                        {durations.map(dur => (
+                          <option key={dur.value} value={dur.value} className="bg-black text-white">
+                            {dur.icon} {dur.label}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Interview Categories */}
+                <div className="bg-gradient-to-r from-white/5 to-white/10 rounded-2xl p-6 border border-white/10">
+                  <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
+                    <Target className="size-6 text-primary" />
+                    Interview Categories
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {categories.map(category => {
+                      const Icon = category.icon;
+                      const isSelected = settings.categories.includes(category.id);
+                      return (
+                        <label 
+                          key={category.id} 
+                          className={`flex items-center space-x-3 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                            isSelected 
+                              ? 'bg-primary/20 border-primary text-white' 
+                              : 'bg-black/20 border-white/20 text-gray-300 hover:border-white/40 hover:bg-white/5'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSettings({
+                                  ...settings,
+                                  categories: [...settings.categories, category.id]
+                                });
+                              } else {
+                                setSettings({
+                                  ...settings,
+                                  categories: settings.categories.filter(c => c !== category.id)
+                                });
+                              }
+                            }}
+                            className="sr-only"
+                          />
+                          <div className={`flex-shrink-0 ${isSelected ? 'text-primary' : category.color}`}>
+                            {isSelected ? <CheckCircle className="size-5" /> : <Icon className="size-5" />}
+                          </div>
+                          <span className="font-medium">{category.label}</span>
+                        </label>
+                      );
+                    })}
                   </div>
                 </div>
 
                 {/* Additional Questions */}
                 <div className="bg-gradient-to-r from-white/5 to-white/10 rounded-2xl p-6 border border-white/10">
                   <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
-                    <Target className="size-6 text-primary" />
+                    <Clock className="size-6 text-primary" />
                     Additional Questions (Optional)
                   </h3>
                   <textarea
