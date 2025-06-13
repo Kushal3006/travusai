@@ -70,14 +70,30 @@ export const InterviewSetup: React.FC = () => {
 
   const languageOptions = getLanguageOptions();
 
+  // Check if form is valid
+  const isFormValid = candidateName.trim().length > 0 && settings.position.length > 0 && settings.categories.length > 0;
+
   const handleStartInterview = () => {
-    if (!candidateName.trim() || !settings.position) {
-      alert("Please fill in all required fields");
+    if (!isFormValid) {
+      alert("Please fill in all required fields: candidate name, position, and select at least one interview category");
       return;
     }
 
-    localStorage.setItem('interview-settings', JSON.stringify(settings));
-    localStorage.setItem('candidate-name', candidateName);
+    // Ensure we have default values for all settings
+    const completeSettings = {
+      ...settings,
+      position: settings.position || positions[0],
+      difficulty: settings.difficulty || "medium",
+      duration: settings.duration || 30,
+      language: settings.language || "en",
+      categories: settings.categories.length > 0 ? settings.categories : ["technical", "behavioral"]
+    };
+
+    localStorage.setItem('interview-settings', JSON.stringify(completeSettings));
+    localStorage.setItem('candidate-name', candidateName.trim());
+    
+    console.log('Starting interview with settings:', completeSettings);
+    console.log('Candidate name:', candidateName.trim());
     
     setScreenState({ currentScreen: "instructions" });
   };
@@ -227,8 +243,9 @@ export const InterviewSetup: React.FC = () => {
                 <div className="bg-gradient-to-r from-white/5 to-white/10 rounded-2xl p-6 border border-white/10">
                   <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
                     <Target className="size-6 text-primary" />
-                    Interview Categories
+                    Interview Categories *
                   </h3>
+                  <p className="text-gray-400 text-sm mb-4">Select at least one category for the interview</p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {categories.map(category => {
                       const Icon = category.icon;
@@ -282,6 +299,18 @@ export const InterviewSetup: React.FC = () => {
                     style={{ fontFamily: "'Inter', sans-serif" }}
                   />
                 </div>
+
+                {/* Form Validation Status */}
+                {!isFormValid && (
+                  <div className="bg-gradient-to-r from-red-500/10 to-red-600/5 rounded-2xl p-4 border border-red-500/30">
+                    <p className="text-red-400 text-sm">
+                      Please complete the following required fields:
+                      {!candidateName.trim() && " • Candidate Name"}
+                      {!settings.position && " • Position"}
+                      {settings.categories.length === 0 && " • At least one Interview Category"}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -297,8 +326,12 @@ export const InterviewSetup: React.FC = () => {
             </Button>
             <Button
               onClick={handleStartInterview}
-              className="flex-1 h-12 text-base font-semibold rounded-xl bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-500/90 transition-all duration-200 shadow-lg"
-              disabled={!candidateName.trim() || !settings.position}
+              className={`flex-1 h-12 text-base font-semibold rounded-xl transition-all duration-200 shadow-lg ${
+                isFormValid 
+                  ? 'bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-500/90 cursor-pointer' 
+                  : 'bg-gray-600 cursor-not-allowed opacity-50'
+              }`}
+              disabled={!isFormValid}
             >
               <Users className="size-5 mr-2" />
               Start Interview
