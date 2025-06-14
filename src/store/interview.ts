@@ -5,15 +5,20 @@ const defaultInterviewSettings: InterviewSettings = {
   position: "",
   difficulty: "medium",
   duration: 30,
-  categories: ["technical", "behavioral", "problem-solving"],
+  categories: [],
   customQuestions: [],
   language: "en"
 };
 
 const getInitialInterviewSettings = (): InterviewSettings => {
-  const savedSettings = localStorage.getItem('interview-settings');
-  if (savedSettings) {
-    return { ...defaultInterviewSettings, ...JSON.parse(savedSettings) };
+  try {
+    const savedSettings = localStorage.getItem('interview-settings');
+    if (savedSettings) {
+      const parsed = JSON.parse(savedSettings);
+      return { ...defaultInterviewSettings, ...parsed };
+    }
+  } catch (error) {
+    console.error('Error loading interview settings:', error);
   }
   return defaultInterviewSettings;
 };

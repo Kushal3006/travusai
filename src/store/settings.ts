@@ -11,10 +11,15 @@ interface Settings {
 }
 
 const getInitialSettings = (): Settings => {
-  const savedSettings = localStorage.getItem('tavus-settings');
-  if (savedSettings) {
-    return JSON.parse(savedSettings);
+  try {
+    const savedSettings = localStorage.getItem('tavus-settings');
+    if (savedSettings) {
+      return JSON.parse(savedSettings);
+    }
+  } catch (error) {
+    console.error('Error loading settings:', error);
   }
+  
   return {
     name: "",
     language: "en",
@@ -27,5 +32,4 @@ const getInitialSettings = (): Settings => {
 };
 
 export const settingsAtom = atom<Settings>(getInitialSettings());
-
-export const settingsSavedAtom = atom<boolean>(false); 
+export const settingsSavedAtom = atom<boolean>(false);
