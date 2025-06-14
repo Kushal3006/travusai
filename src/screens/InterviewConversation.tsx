@@ -27,6 +27,7 @@ import {
 import { apiTokenAtom } from "@/store/tokens";
 import { quantum } from 'ldrs';
 import { cn } from "@/lib/utils";
+import { updateInterviewStatus } from "@/lib/supabase";
 
 quantum.register();
 
@@ -49,6 +50,7 @@ export const InterviewConversation: React.FC = () => {
   // Get interview settings from localStorage
   const candidateName = localStorage.getItem('candidate-name') || 'Candidate';
   const interviewSettings = JSON.parse(localStorage.getItem('interview-settings') || '{}');
+  const interviewId = localStorage.getItem('interview-id');
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -87,15 +89,31 @@ export const InterviewConversation: React.FC = () => {
     daily?.setLocalAudio(!isMicEnabled);
   }, [daily, isMicEnabled]);
 
-  const endInterview = useCallback(() => {
-    daily?.leave();
-    daily?.destroy();
-    if (conversation?.conversation_id && token) {
-      endConversation(token, conversation.conversation_id);
+  const endInterview = useCallback(async () => {
+    try {
+      // End the Daily call
+      daily?.leave();
+      daily?.destroy();
+      
+      // End the Tavus conversation
+      if (conversation?.conversation_id && token) {
+        await endConversation(token, conversation.conversation_id);
+      }
+      
+      // Update interview status in database
+      if (interviewId) {
+        await updateInterviewStatus(interviewId, 'completed');
+      }
+      
+      setConversation(null);
+      setScreenState({ currentScreen: "interviewComplete" });
+    } catch (error) {
+      console.error('Error ending interview:', error);
+      // Still proceed to completion screen even if there's an error
+      setConversation(null);
+      setScreenState({ currentScreen: "interviewComplete" });
     }
-    setConversation(null);
-    setScreenState({ currentScreen: "interviewComplete" });
-  }, [daily, token, conversation, setConversation, setScreenState]);
+  }, [daily, token, conversation, interviewId, setConversation, setScreenState]);
 
   const formatDuration = (start: Date, current: Date) => {
     const diff = Math.floor((current.getTime() - start.getTime()) / 1000);

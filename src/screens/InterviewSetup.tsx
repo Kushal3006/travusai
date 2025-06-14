@@ -8,8 +8,9 @@ import { screenAtom } from "@/store/screens";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { Briefcase, Users, Clock, Target, Brain, CheckCircle, Globe } from "lucide-react";
+import { Briefcase, Users, Clock, Target, Brain, CheckCircle, Globe, AlertCircle } from "lucide-react";
 import { getLanguageOptions } from "@/api/interviewQuestions";
+import { createCandidate, createInterview } from "@/lib/supabase";
 
 const Label = ({ children, htmlFor }: { children: React.ReactNode; htmlFor: string }) => (
   <label htmlFor={htmlFor} className="text-sm font-semibold text-white mb-3 block tracking-wide">
@@ -37,6 +38,9 @@ export const InterviewSetup: React.FC = () => {
   const [settings, setSettings] = useAtom(interviewSettingsAtom);
   const [, setScreenState] = useAtom(screenAtom);
   const [candidateName, setCandidateName] = useState("");
+  const [candidateEmail, setCandidateEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const positions = [
     "Frontend Developer",
@@ -46,7 +50,9 @@ export const InterviewSetup: React.FC = () => {
     "Data Scientist",
     "Product Manager",
     "UX Designer",
-    "Software Engineer"
+    "Software Engineer",
+    "Mobile Developer",
+    "QA Engineer"
   ];
 
   const difficulties = [
@@ -71,31 +77,62 @@ export const InterviewSetup: React.FC = () => {
   const languageOptions = getLanguageOptions();
 
   // Check if form is valid
-  const isFormValid = candidateName.trim().length > 0 && settings.position.length > 0 && settings.categories.length > 0;
+  const isFormValid = candidateName.trim().length > 0 && 
+                     settings.position.length > 0 && 
+                     settings.categories.length > 0;
 
-  const handleStartInterview = () => {
+  const handleCategoryToggle = (categoryId: string) => {
+    const updatedCategories = settings.categories.includes(categoryId)
+      ? settings.categories.filter(c => c !== categoryId)
+      : [...settings.categories, categoryId];
+    
+    setSettings({ ...settings, categories: updatedCategories });
+  };
+
+  const handleStartInterview = async () => {
     if (!isFormValid) {
-      alert("Please fill in all required fields: candidate name, position, and select at least one interview category");
+      setError("Please fill in all required fields: candidate name, position, and select at least one interview category");
       return;
     }
 
-    // Ensure we have default values for all settings
-    const completeSettings = {
-      ...settings,
-      position: settings.position || positions[0],
-      difficulty: settings.difficulty || "medium",
-      duration: settings.duration || 30,
-      language: settings.language || "en",
-      categories: settings.categories.length > 0 ? settings.categories : ["technical", "behavioral"]
-    };
+    setIsLoading(true);
+    setError(null);
 
-    localStorage.setItem('interview-settings', JSON.stringify(completeSettings));
-    localStorage.setItem('candidate-name', candidateName.trim());
-    
-    console.log('Starting interview with settings:', completeSettings);
-    console.log('Candidate name:', candidateName.trim());
-    
-    setScreenState({ currentScreen: "instructions" });
+    try {
+      // Create candidate in database
+      const candidate = await createCandidate(candidateName.trim(), candidateEmail.trim() || undefined);
+      
+      // Ensure we have complete settings
+      const completeSettings = {
+        position: settings.position,
+        difficulty: settings.difficulty || "medium",
+        duration: settings.duration || 30,
+        language: settings.language || "en",
+        categories: settings.categories.length > 0 ? settings.categories : ["technical", "behavioral"]
+      };
+
+      // Create interview in database
+      const interview = await createInterview(candidate.id, completeSettings);
+
+      // Store data in localStorage for the interview session
+      localStorage.setItem('interview-settings', JSON.stringify(completeSettings));
+      localStorage.setItem('candidate-name', candidateName.trim());
+      localStorage.setItem('candidate-id', candidate.id);
+      localStorage.setItem('interview-id', interview.id);
+      
+      console.log('Interview created successfully:', {
+        candidate,
+        interview,
+        settings: completeSettings
+      });
+      
+      setScreenState({ currentScreen: "instructions" });
+    } catch (error) {
+      console.error('Error creating interview:', error);
+      setError('Failed to create interview. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleBack = () => {
@@ -145,22 +182,46 @@ export const InterviewSetup: React.FC = () => {
               `}</style>
 
               <div className="space-y-6 pb-4">
+                {/* Error Message */}
+                {error && (
+                  <div className="bg-gradient-to-r from-red-500/10 to-red-600/5 rounded-2xl p-4 border border-red-500/30">
+                    <div className="flex items-center gap-3">
+                      <AlertCircle className="size-5 text-red-400 flex-shrink-0" />
+                      <p className="text-red-400 text-sm">{error}</p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Candidate Information */}
                 <div className="bg-gradient-to-r from-white/5 to-white/10 rounded-2xl p-6 border border-white/10">
                   <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
                     <Users className="size-6 text-primary" />
                     Candidate Information
                   </h3>
-                  <div>
-                    <Label htmlFor="candidateName">Full Name *</Label>
-                    <Input
-                      id="candidateName"
-                      value={candidateName}
-                      onChange={(e) => setCandidateName(e.target.value)}
-                      placeholder="Enter candidate's full name"
-                      className="h-12 bg-black/30 border-2 border-white/20 text-white text-base rounded-xl px-4 backdrop-blur-sm transition-all duration-200 hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
-                      style={{ fontFamily: "'Inter', sans-serif" }}
-                    />
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <Label htmlFor="candidateName">Full Name *</Label>
+                      <Input
+                        id="candidateName"
+                        value={candidateName}
+                        onChange={(e) => setCandidateName(e.target.value)}
+                        placeholder="Enter candidate's full name"
+                        className="h-12 bg-black/30 border-2 border-white/20 text-white text-base rounded-xl px-4 backdrop-blur-sm transition-all duration-200 hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        style={{ fontFamily: "'Inter', sans-serif" }}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="candidateEmail">Email (Optional)</Label>
+                      <Input
+                        id="candidateEmail"
+                        type="email"
+                        value={candidateEmail}
+                        onChange={(e) => setCandidateEmail(e.target.value)}
+                        placeholder="Enter candidate's email"
+                        className="h-12 bg-black/30 border-2 border-white/20 text-white text-base rounded-xl px-4 backdrop-blur-sm transition-all duration-200 hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        style={{ fontFamily: "'Inter', sans-serif" }}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -251,64 +312,42 @@ export const InterviewSetup: React.FC = () => {
                       const Icon = category.icon;
                       const isSelected = settings.categories.includes(category.id);
                       return (
-                        <label 
-                          key={category.id} 
+                        <button
+                          key={category.id}
+                          type="button"
+                          onClick={() => handleCategoryToggle(category.id)}
                           className={`flex items-center space-x-3 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
                             isSelected 
                               ? 'bg-primary/20 border-primary text-white' 
                               : 'bg-black/20 border-white/20 text-gray-300 hover:border-white/40 hover:bg-white/5'
                           }`}
                         >
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSettings({
-                                  ...settings,
-                                  categories: [...settings.categories, category.id]
-                                });
-                              } else {
-                                setSettings({
-                                  ...settings,
-                                  categories: settings.categories.filter(c => c !== category.id)
-                                });
-                              }
-                            }}
-                            className="sr-only"
-                          />
                           <div className={`flex-shrink-0 ${isSelected ? 'text-primary' : category.color}`}>
                             {isSelected ? <CheckCircle className="size-5" /> : <Icon className="size-5" />}
                           </div>
                           <span className="font-medium">{category.label}</span>
-                        </label>
+                        </button>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* Additional Questions */}
-                <div className="bg-gradient-to-r from-white/5 to-white/10 rounded-2xl p-6 border border-white/10">
-                  <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
-                    <Clock className="size-6 text-primary" />
-                    Additional Questions (Optional)
-                  </h3>
-                  <textarea
-                    placeholder="Add any specific questions you'd like to include in the interview..."
-                    className="w-full h-24 rounded-xl border-2 border-white/20 bg-black/30 backdrop-blur-sm px-4 py-3 text-base text-white resize-none transition-all duration-200 hover:border-primary/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    style={{ fontFamily: "'Inter', sans-serif" }}
-                  />
-                </div>
-
                 {/* Form Validation Status */}
                 {!isFormValid && (
-                  <div className="bg-gradient-to-r from-red-500/10 to-red-600/5 rounded-2xl p-4 border border-red-500/30">
-                    <p className="text-red-400 text-sm">
-                      Please complete the following required fields:
-                      {!candidateName.trim() && " • Candidate Name"}
-                      {!settings.position && " • Position"}
-                      {settings.categories.length === 0 && " • At least one Interview Category"}
-                    </p>
+                  <div className="bg-gradient-to-r from-yellow-500/10 to-yellow-600/5 rounded-2xl p-4 border border-yellow-500/30">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="size-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-yellow-400 text-sm font-medium mb-2">
+                          Please complete the following required fields:
+                        </p>
+                        <ul className="text-yellow-300 text-sm space-y-1">
+                          {!candidateName.trim() && <li>• Candidate Name</li>}
+                          {!settings.position && <li>• Position</li>}
+                          {settings.categories.length === 0 && <li>• At least one Interview Category</li>}
+                        </ul>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -320,21 +359,31 @@ export const InterviewSetup: React.FC = () => {
             <Button
               onClick={handleBack}
               variant="outline"
-              className="flex-1 h-12 text-base font-semibold rounded-xl border-2 border-white/30 bg-white/10 hover:bg-white/20 transition-all duration-200"
+              disabled={isLoading}
+              className="flex-1 h-12 text-base font-semibold rounded-xl border-2 border-white/30 bg-white/10 hover:bg-white/20 transition-all duration-200 disabled:opacity-50"
             >
               Back
             </Button>
             <Button
               onClick={handleStartInterview}
+              disabled={!isFormValid || isLoading}
               className={`flex-1 h-12 text-base font-semibold rounded-xl transition-all duration-200 shadow-lg ${
-                isFormValid 
+                isFormValid && !isLoading
                   ? 'bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-500/90 cursor-pointer' 
                   : 'bg-gray-600 cursor-not-allowed opacity-50'
               }`}
-              disabled={!isFormValid}
             >
-              <Users className="size-5 mr-2" />
-              Start Interview
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Creating Interview...
+                </div>
+              ) : (
+                <>
+                  <Users className="size-5 mr-2" />
+                  Start Interview
+                </>
+              )}
             </Button>
           </div>
         </div>

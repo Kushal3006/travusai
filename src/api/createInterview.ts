@@ -1,6 +1,7 @@
 import { IConversation } from "@/types";
 import { InterviewSettings } from "@/types/interview";
 import { generateInterviewQuestions, getLanguageOptions } from "./interviewQuestions";
+import { updateInterviewStatus } from "@/lib/supabase";
 
 export const createInterviewConversation = async (
   token: string,
@@ -75,5 +76,16 @@ Start by greeting the candidate warmly in ${languageName} and asking the first q
   }
 
   const data = await response.json();
+  
+  // Update interview status in database
+  const interviewId = localStorage.getItem('interview-id');
+  if (interviewId) {
+    try {
+      await updateInterviewStatus(interviewId, 'active', data.conversation_id);
+    } catch (error) {
+      console.error('Failed to update interview status:', error);
+    }
+  }
+  
   return data;
 };
