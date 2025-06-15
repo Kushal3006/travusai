@@ -11,6 +11,7 @@ import { useState } from "react";
 import { Briefcase, Users, Clock, Target, Brain, CheckCircle, Globe, AlertCircle } from "lucide-react";
 import { getLanguageOptions } from "@/api/interviewQuestions";
 import { createCandidate, createInterview } from "@/lib/supabase";
+import { apiTokenAtom } from "@/store/tokens";
 
 const Label = ({ children, htmlFor }: { children: React.ReactNode; htmlFor: string }) => (
   <label htmlFor={htmlFor} className="text-sm font-semibold text-white mb-3 block tracking-wide">
@@ -37,6 +38,7 @@ const Select = ({ children, value, onChange, className }: {
 export const InterviewSetup: React.FC = () => {
   const [settings, setSettings] = useAtom(interviewSettingsAtom);
   const [, setScreenState] = useAtom(screenAtom);
+  const [token] = useAtom(apiTokenAtom);
   const [candidateName, setCandidateName] = useState("");
   const [candidateEmail, setCandidateEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -79,7 +81,8 @@ export const InterviewSetup: React.FC = () => {
   // Check if form is valid
   const isFormValid = candidateName.trim().length > 0 && 
                      settings.position.length > 0 && 
-                     settings.categories.length > 0;
+                     settings.categories.length > 0 &&
+                     token; // Also check if token exists
 
   const handleCategoryToggle = (categoryId: string) => {
     const updatedCategories = settings.categories.includes(categoryId)
@@ -90,8 +93,23 @@ export const InterviewSetup: React.FC = () => {
   };
 
   const handleStartInterview = async () => {
-    if (!isFormValid) {
-      setError("Please fill in all required fields: candidate name, position, and select at least one interview category");
+    if (!token) {
+      setError("API token is required. Please go back and enter your Tavus API key.");
+      return;
+    }
+
+    if (!candidateName.trim()) {
+      setError("Candidate name is required.");
+      return;
+    }
+
+    if (!settings.position) {
+      setError("Please select a position.");
+      return;
+    }
+
+    if (settings.categories.length === 0) {
+      setError("Please select at least one interview category.");
       return;
     }
 
@@ -99,8 +117,11 @@ export const InterviewSetup: React.FC = () => {
     setError(null);
 
     try {
+      console.log('Starting interview creation process...');
+      
       // Create candidate in database
       const candidate = await createCandidate(candidateName.trim(), candidateEmail.trim() || undefined);
+      console.log('Candidate created:', candidate);
       
       // Ensure we have complete settings
       const completeSettings = {
@@ -111,8 +132,11 @@ export const InterviewSetup: React.FC = () => {
         categories: settings.categories.length > 0 ? settings.categories : ["technical", "behavioral"]
       };
 
+      console.log('Interview settings:', completeSettings);
+
       // Create interview in database
       const interview = await createInterview(candidate.id, completeSettings);
+      console.log('Interview created:', interview);
 
       // Store data in localStorage for the interview session
       localStorage.setItem('interview-settings', JSON.stringify(completeSettings));
@@ -120,12 +144,9 @@ export const InterviewSetup: React.FC = () => {
       localStorage.setItem('candidate-id', candidate.id);
       localStorage.setItem('interview-id', interview.id);
       
-      console.log('Interview created successfully:', {
-        candidate,
-        interview,
-        settings: completeSettings
-      });
+      console.log('Interview setup completed successfully');
       
+      // Navigate to instructions
       setScreenState({ currentScreen: "instructions" });
     } catch (error) {
       console.error('Error creating interview:', error);
@@ -136,6 +157,13 @@ export const InterviewSetup: React.FC = () => {
   };
 
   const handleBack = () => {
+    // Clear any stored interview data when going back
+    localStorage.removeItem('interview-settings');
+    localStorage.removeItem('candidate-name');
+    localStorage.removeItem('candidate-id');
+    localStorage.removeItem('interview-id');
+    
+    // Navigate back to intro screen
     setScreenState({ currentScreen: "intro" });
   };
 
@@ -188,6 +216,18 @@ export const InterviewSetup: React.FC = () => {
                     <div className="flex items-center gap-3">
                       <AlertCircle className="size-5 text-red-400 flex-shrink-0" />
                       <p className="text-red-400 text-sm">{error}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Token Warning */}
+                {!token && (
+                  <div className="bg-gradient-to-r from-yellow-500/10 to-yellow-600/5 rounded-2xl p-4 border border-yellow-500/30">
+                    <div className="flex items-center gap-3">
+                      <AlertCircle className="size-5 text-yellow-400 flex-shrink-0" />
+                      <p className="text-yellow-400 text-sm">
+                        API token is required to start an interview. Please go back and enter your Tavus API key.
+                      </p>
                     </div>
                   </div>
                 )}
@@ -342,6 +382,7 @@ export const InterviewSetup: React.FC = () => {
                           Please complete the following required fields:
                         </p>
                         <ul className="text-yellow-300 text-sm space-y-1">
+                          {!token && <li>• API Token (go back to enter your Tavus API key)</li>}
                           {!candidateName.trim() && <li>• Candidate Name</li>}
                           {!settings.position && <li>• Position</li>}
                           {settings.categories.length === 0 && <li>• At least one Interview Category</li>}
@@ -362,7 +403,7 @@ export const InterviewSetup: React.FC = () => {
               disabled={isLoading}
               className="flex-1 h-12 text-base font-semibold rounded-xl border-2 border-white/30 bg-white/10 hover:bg-white/20 transition-all duration-200 disabled:opacity-50"
             >
-              Back
+              Back to Home
             </Button>
             <Button
               onClick={handleStartInterview}
